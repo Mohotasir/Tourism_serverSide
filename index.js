@@ -2,7 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const app  = express();
 require('dotenv').config()
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion,ObjectId } = require('mongodb');
 const port = process.env.port || 5000;
 
 app.use(express.json())
@@ -26,10 +26,23 @@ async function run() {
     
     await client.connect();
     const databaseCollection = client.db("tourismDB").collection("spot");
+
+    app.get("/spots",async(req,res)=>{
+        const cursor = databaseCollection.find();
+        const result = await  cursor.toArray();
+        res.send(result);
+    })
+    app.get('/spots/:id',async(req,res)=>{
+          const id = req.params.id;
+          console.log(id);
+          const query = {_id : new ObjectId(id)};
+          const spot = await databaseCollection.findOne(query);
+          res.send(spot);
+    })
     app.post('/spots',async(req,res)=>{
-        const user = req.body;
+        const spot = req.body;
          //console.log("new user",user)
-         const result = await databaseCollection.insertOne(user);
+         const result = await databaseCollection.insertOne(spot);
          res.send(result);
     })
     await client.db("admin").command({ ping: 1 });
