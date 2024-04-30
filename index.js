@@ -3,10 +3,13 @@ const cors = require('cors');
 const app  = express();
 require('dotenv').config()
 const { MongoClient, ServerApiVersion,ObjectId } = require('mongodb');
-const port = process.env.port || 5000;
+const port = process.env.PORT || 5000;
 
 app.use(express.json())
-app.use(cors());
+app.use(cors(//{
+ // origin:[" http://localhost:5173/","https://tourism-3cbc5.firebaseapp.com/"]
+//}
+));
 
 /////////////////////////////////////
 
@@ -24,14 +27,23 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     
-    await client.connect();
+    //await client.connect();
     const databaseCollection = client.db("tourismDB").collection("spot");
-
+    const  countryCollection= client.db("tourismDB").collection("country");
+    app.get("/",(req,res)=>{
+      res.send("server is running")
+    })
     app.get("/spots",async(req,res)=>{
         const cursor = databaseCollection.find();
         const result = await  cursor.toArray();
         res.send(result);
     })
+    // get country ..........
+    app.get("/country",async(req,res)=>{
+      const cursor =  countryCollection.find();
+      const result = await  cursor.toArray();
+      res.send(result);
+  })
     app.get('/spots/:id',async(req,res)=>{
           const id = req.params.id;
           console.log(id);
@@ -51,6 +63,11 @@ async function run() {
     app.post('/spots',async(req,res)=>{
         const spot = req.body;
          const result = await databaseCollection.insertOne(spot);
+         res.send(result);
+    })
+    app.post('/country',async(req,res)=>{
+        const cntry = req.body;
+         const result = await countryCollection.insertOne(cntry);
          res.send(result);
     })
     app.put("/spots/:id",async(req,res)=>{
